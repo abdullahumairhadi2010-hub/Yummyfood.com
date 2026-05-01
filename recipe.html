@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>🍳 FlavorFind – Search any dish, any flavor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fefaf5;
+      color: #1e1e2a;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 2rem;
+    }
+
+    /* header */
+    .global-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px dashed #e7d8c8;
+      padding-bottom: 1rem;
+    }
+    .title h1 {
+      font-size: 2.3rem;
+      background: linear-gradient(135deg, #c16a2e, #b35218);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.01em;
+    }
+    .title p {
+      color: #9b7a5c;
+      font-size: 0.85rem;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    .fav-btn {
+      background: #f3e3d5;
+      color: #a65527;
+      border: none;
+      padding: 0 1.2rem;
+      height: 44px;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .fav-btn:hover {
+      background: #e7cfbc;
+    }
+
+    /* main search panel */
+    .hero-search {
+      background: white;
+      border-radius: 48px;
+      padding: 2rem 2rem 1.8rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.05);
+      border: 1px solid #f0e2d4;
+      text-align: center;
+    }
+    .hero-search h2 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #3e2a1c;
+      margin-bottom: 0.5rem;
+    }
+    .hero-search p {
+      color: #b77b48;
+      margin-bottom: 1.5rem;
+    }
+    .search-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .search-box input {
+      flex: 3;
+      padding: 0.9rem 1.2rem;
+      border-radius: 80px;
+      border: 1px solid #f0decb;
+      background: #fffbf7;
+      font-size: 1rem;
+      font-weight: 500;
+      outline: none;
+    }
+    .search-box button {
+      flex: 1;
+      background: #bc6c25;
+      color: white;
+      border: none;
+      border-radius: 80px;
+      padding: 0 1.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .search-box button:hover {
+      background: #9b551c;
+    }
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+      margin-top: 1.5rem;
+      justify-content: center;
+    }
+    .filter-group {
+      min-width: 200px;
+    }
+    .filter-group label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #b77b48;
+      margin-bottom: 0.3rem;
+    }
+    select {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      border-radius: 60px;
+      border: 1px solid #f0decb;
+      background: #fffbf7;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    /* results grid & card styling */
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 3rem;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 5px solid #f1ddcd;
+      border-top: 5px solid #bc6c25;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-top: 1.5rem;
+    }
+    .meal-card {
+      background: white;
+      border-radius: 1.8rem;
+      overflow: hidden;
+      transition: 0.25s ease;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      border: 1px solid #f0e0cf;
+      position: relative;
+    }
+    .meal-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 22px 32px -12px rgba(150, 80, 30, 0.2);
+    }
+    .favorite-icon {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 1.8rem;
+      background: rgba(255,255,240,0.85);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      cursor: pointer;
+      z-index: 5;
+      color: #c97e5a;
+    }
+    .favorite-icon.favorited {
+      color: #e83e3e;
+    }
+    .card-img {
+      width: 100%;
+      height: 210px;
+      object-fit: cover;
+    }
+    .card-content {
+      padding: 1.2rem 1rem 1.2rem;
+    }
+    .meal-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #3e2a1c;
+    }
+    .meal-meta {
+      font-size: 0.7rem;
+      font-weight: 500;
+      background: #f2e4d9;
+      display: inline-block;
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px;
+      margin-top: 0.5rem;
+      color: #9c6a44;
+    }
+    .view-recipe-btn {
+      width: 100%;
+      margin-top: 0.8rem;
+      background: transparent;
+      border: 1px solid #e1cfbc;
+      color: #bc6c25;
+      padding: 0.45rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .no-results {
+      text-align: center;
+      padding: 3rem;
+      background: #fffbf5;
+      border-radius: 2rem;
+      color: #aa7a52;
+    }
+    .suggestion-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    .secondary-btn {
+      background: #eaddd0;
+      color: #8a5a3a;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: 0.2s;
+    }
+    .modal-overlay.active {
+      visibility: visible;
+      opacity: 1;
+    }
+    .modal-container {
+      background: #fffef7;
+      max-width: 700px;
+      width: 90%;
+      max-height: 85vh;
+      border-radius: 2rem;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 1.8rem;
+      background: #faf1e8;
+      border-bottom: 1px solid #eedbcb;
+    }
+    .modal-close {
+      background: none;
+      font-size: 2rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 40px;
+      color: #9b6e49;
+    }
+    .modal-body {
+      padding: 1.8rem;
+    }
+    footer {
+      text-align: center;
+      margin-top: 2.5rem;
+      font-size: 0.75rem;
+      color: #ba9b7c;
+    }
+    @media (max-width: 700px) {
+      .search-box { flex-direction: column; }
+      .filter-row { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="global-header">
+    <div class="title">
+      <h1>🍳 FlavorFind</h1>
+      <p>type any dish · any ingredient · get recipes instantly</p>
+    </div>
+    <div class="action-buttons">
+      <button id="showFavoritesBtn" class="fav-btn">❤️ My favorites</button>
+      <button id="randomWorldBtn" class="fav-btn">🎲 Surprise me</button>
+    </div>
+  </div>
+
+  <div class="hero-search">
+    <h2>What are you craving?</h2>
+    <p>Search by name — paella, dumplings, tikka masala, brownies ... anything</p>
+    <div class="search-box">
+      <input type="text" id="mainSearchInput" placeholder="e.g., lasagna, sushi, curry, pancakes" autocomplete="off">
+      <button id="mainSearchBtn">🔍 Find recipes</button>
+    </div>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>🍲 Or browse by category</label>
+        <select id="categorySelect">
+          <option value="">-- All categories --</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <button id="applyCategoryBtn" style="background:#eaddd0; color:#6b3f1c;">Explore category</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultsArea">
+    <div id="loadingState" class="loading" style="display: none;"><div class="spinner"></div><div>Searching the world's kitchen...</div></div>
+    <div id="mealsGrid" class="results-grid"></div>
+  </div>
+  <footer>✨ Click any meal for full recipe • ❤️ Save your favorites • Data from TheMealDB</footer>
+</div>
+
+<!-- MODAL -->
+<div id="recipeModal" class="modal-overlay">
+  <div class="modal-container">
+    <div class="modal-header"><h2 id="modalTitle">Recipe</h2><button id="closeModalBtn" class="modal-close">&times;</button></div>
+    <div class="modal-body"><div id="modalContent"><div class="loading"><div class="spinner"></div></div></div></div>
+  </div>
+</div>
+
+<script>
+  // ---------- DOM elements ----------
+  const mainSearchInput = document.getElementById('mainSearchInput');
+  const mainSearchBtn = document.getElementById('mainSearchBtn');
+  const categorySelect = document.getElementById('categorySelect');
+  const applyCategoryBtn = document.getElementById('applyCategoryBtn');
+  const mealsGrid = document.getElementById('mealsGrid');
+  const loadingState = document.getElementById('loadingState');
+  const showFavoritesBtn = document.getElementById('showFavoritesBtn');
+  const randomWorldBtn = document.getElementById('randomWorldBtn');
+
+  // Modal elements
+  const modalOverlay = document.getElementById('recipeModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalContentDiv = document.getElementById('modalContent');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+
+  // ---------- STATE ----------
+  let currentMealsList = [];
+  let favorites = new Map();        // id -> { id, name, thumb }
+  let inFavoritesMode = false;
+
+  // ---------- Favorites helpers ----------
+  function saveFavoritesToLocal() {
+    const favArr = Array.from(favorites.values());
+    localStorage.setItem('flavorFindFavs', JSON.stringify(favArr));
+  }
+
+  function loadFavoritesFromLocal() {
+    const raw = localStorage.getItem('flavorFindFavs');
+    if (raw) {
+      try {
+        const arr = JSON.parse(raw);
+        favorites.clear();
+        arr.forEach(f => favorites.set(f.id, { id: f.id, name: f.name, thumb: f.thumb }));
+      } catch(e) { console.warn(e); }
+    }
+  }
+
+  function toggleFavorite(meal, starElement) {
+    const id = meal.idMeal;
+    if (favorites.has(id)) {
+      favorites.delete(id);
+      starElement.classList.remove('favorited');
+      starElement.innerHTML = '🤍';
+    } else {
+      favorites.set(id, { id: meal.idMeal, name: meal.strMeal, thumb: meal.strMealThumb });
+      starElement.classList.add('favorited');
+      starElement.innerHTML = '❤️';
+    }
+    saveFavoritesToLocal();
+    // If currently in favorites view, re-render
+    if (inFavoritesMode) {
+      showFavorites();
+    }
+  }
+
+  // ---------- UI Helpers ----------
+  function setLoading(show) {
+    if (show) {
+      loadingState.style.display = 'flex';
+      mealsGrid.style.display = 'none';
+    } else {
+      loadingState.style.display = 'none';
+      mealsGrid.style.display = 'grid';
+    }
+  }
+
+  function renderMealCards(mealsArray, sourceMessage = null) {
+    mealsGrid.innerHTML = '';
+    if (!mealsArray.length) {
+      let emptyHtml = `<div class="no-results">
+        <div>😕 No recipes found for your query.</div>
+        <div class="suggestion-buttons">
+          <button id="tryRandomBtn" class="secondary-btn">🎲 Try a random dish</button>
+          <button id="tryCategoryBtn" class="secondary-btn">🍲 Browse a category</button>
+        </div>
+      </div>`;
+      mealsGrid.innerHTML = emptyHtml;
+      const randomBtn = document.getElementById('tryRandomBtn');
+      const categoryBtn = document.getElementById('tryCategoryBtn');
+      if (randomBtn) randomBtn.addEventListener('click', () => randomGlobalMeal());
+      if (categoryBtn) categoryBtn.addEventListener('click', () => {
+        const cat = categorySelect.value;
+        if (cat) fetchByCategory(cat);
+        else alert("Please select a category from the dropdown first.");
+      });
+      return;
+    }
+    mealsArray.forEach(meal => {
+      const card = document.createElement('div');
+      card.className = 'meal-card';
+      const isFav = favorites.has(meal.idMeal);
+      const favStar = document.createElement('div');
+      favStar.className = `favorite-icon ${isFav ? 'favorited' : ''}`;
+      favStar.innerHTML = isFav ? '❤️' : '🤍';
+      favStar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFavorite(meal, favStar);
+      });
+      const img = document.createElement('img');
+      img.src = meal.strMealThumb;
+      img.alt = meal.strMeal;
+      img.className = 'card-img';
+      const content = document.createElement('div');
+      content.className = 'card-content';
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'meal-name';
+      nameDiv.innerText = meal.strMeal;
+      const metaSpan = document.createElement('span');
+      metaSpan.className = 'meal-meta';
+      if (meal.area && meal.area !== 'null' && meal.area.trim() !== '' && meal.area !== '⭐ Favorite') {
+        metaSpan.innerText = `🌎 ${meal.area}`;
+      } else if (meal.area === '⭐ Favorite') {
+        metaSpan.innerText = '❤️ Saved';
+      } else {
+        metaSpan.innerText = '🍽️ Recipe';
+      }
+      const recipeBtn = document.createElement('button');
+      recipeBtn.innerText = '👩‍🍳 Full recipe';
+      recipeBtn.className = 'view-recipe-btn';
+      recipeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openMealDetailsById(meal.idMeal);
+      });
+      content.appendChild(nameDiv);
+      content.appendChild(metaSpan);
+      content.appendChild(recipeBtn);
+      card.appendChild(favStar);
+      card.appendChild(img);
+      card.appendChild(content);
+      card.addEventListener('click', () => openMealDetailsById(meal.idMeal));
+      mealsGrid.appendChild(card);
+    });
+  }
+
+  // ---------- API CALLS (pure search + category) ----------
+  async function searchMealsByName(query) {
+    if (!query.trim()) {
+      alert("Please type a dish name or ingredient (e.g., 'pizza', 'noodles')");
+      return;
+    }
+    inFavoritesMode = false;
+    setLoading(true);
+    try {
+      const resp = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(query)}`);
+      const data = await resp.json();
+      if (data.meals && data.meals.length) {
+        const results = data.meals.map(m => ({
+          idMeal: m.idMeal,
+          strMeal: m.strMeal,
+          strMealThumb: m.strMealThumb,
+          area: m.strArea || null
+        }));
+        currentMealsList = results;
+        renderMealCards(currentMealsList);
+      } else {
+        renderMealCards([]);
+        currentMealsList = [];
+      }
+    } catch(e) {
+      mealsGrid.innerHTML = `<div class="no-results">⚠️ Network error. Please try again.</div>`;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchByCategory(category) {
+    if (!category) {
+      alert("Please select a category from the dropdown.");
+      return;
+    }
+    inFavoritesMode = false;
+    setLoading(true);
+    try {
+      const url = `https://www.themealdb.com/api/json/v1/1/filter.php?c=${encodeURIComponent(category)}`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      let meals = data.meals;
+      if (!meals || meals.length === 0) {
+        mealsGrid.innerHTML = `<div class="no-results">😔 No dishes in '${category}' category. Try another category or search by name.</div>`;
+        currentMealsList = [];
+        setLoading(false);
+        return;
+      }
+      const mealList = meals.map(m => ({
+        idMeal: m.idMeal,
+        strMeal: m.strMeal,
+        strMealThumb: m.strMealThumb,
+        area: null
+      }));
+      currentMealsList = mealList;
+      renderMealCards(currentMealsList);
+    } catch(e) {
+      mealsGrid.innerHTML = `<div class="no-results">Error fetching category.</div>`;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function randomGlobalMeal() {
+    inFavoritesMode = false;
+    setLoading(true);
+    try {
+      const resp = await fetch('https://www.themealdb.com/api/json/v1/1/random.php');
+      const data = await resp.json();
+      if (data.meals && data.meals[0]) {
+        const m = data.meals[0];
+        const randomMeal = {
+          idMeal: m.idMeal,
+          strMeal: m.strMeal,
+          strMealThumb: m.strMealThumb,
+          area: m.strArea || 'Global'
+        };
+        currentMealsList = [randomMeal];
+        renderMealCards(currentMealsList);
+      } else throw new Error();
+    } catch(e) {
+      mealsGrid.innerHTML = `<div class="no-results">🌀 Random failed, try again.</div>`;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function showFavorites() {
+    inFavoritesMode = true;
+    if (favorites.size === 0) {
+      mealsGrid.innerHTML = `<div class="no-results">💖 No saved favorites yet. Heart any recipe to build your collection!</div>`;
+      currentMealsList = [];
+      return;
+    }
+    const favList = Array.from(favorites.values()).map(f => ({
+      idMeal: f.id,
+      strMeal: f.name,
+      strMealThumb: f.thumb,
+      area: '⭐ Favorite'
+    }));
+    currentMealsList = favList;
+    renderMealCards(currentMealsList);
+  }
+
+  // load initial random sampler (3 dishes to show something nice)
+  async function loadInitialSampler() {
+    inFavoritesMode = false;
+    setLoading(true);
+    try {
+      const randomPromises = Array(3).fill().map(() => fetch('https://www.themealdb.com/api/json/v1/1/random.php'));
+      const responses = await Promise.all(randomPromises);
+      const mealsData = await Promise.all(responses.map(r => r.json()));
+      const sampler = [];
+      mealsData.forEach(data => {
+        if (data.meals && data.meals[0]) {
+          const m = data.meals[0];
+          sampler.push({
+            idMeal: m.idMeal,
+            strMeal: m.strMeal,
+            strMealThumb: m.strMealThumb,
+            area: m.strArea || 'World'
+          });
+        }
+      });
+      if (sampler.length) {
+        currentMealsList = sampler;
+        renderMealCards(currentMealsList);
+      } else throw new Error();
+    } catch(e) {
+      mealsGrid.innerHTML = `<div class="no-results">✨ Welcome! Type any dish above (e.g., "taco", "ramen", "tiramisu") to start.</div>`;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // load categories for dropdown
+  async function loadCategories() {
+    try {
+      const catRes = await fetch('https://www.themealdb.com/api/json/v1/1/list.php?c=list');
+      const catData = await catRes.json();
+      if (catData.meals) {
+        categorySelect.innerHTML = '<option value="">-- All categories --</option>';
+        catData.meals.forEach(c => {
+          categorySelect.innerHTML += `<option value="${c.strCategory}">${c.strCategory}</option>`;
+        });
+      }
+    } catch(e) { console.warn(e); }
+  }
+
+  // ---------- MODAL (recipe details) ----------
+  async function openMealDetailsById(mealId) {
+    modalOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    modalContentDiv.innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading authentic recipe...</div></div>';
+    try {
+      const res = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${mealId}`);
+      const data = await res.json();
+      const meal = data.meals[0];
+      if (!meal) throw new Error();
+      modalTitle.innerText = meal.strMeal;
+      let ingredientsHtml = '<ul style="list-style:none; background:#faf2ea; border-radius:20px; padding:1rem;">';
+      for (let i=1; i<=20; i++) {
+        const ing = meal[`strIngredient${i}`];
+        const measure = meal[`strMeasure${i}`];
+        if (ing && ing.trim() !== '') {
+          ingredientsHtml += `<li style="margin-bottom:8px;">🍴 ${measure ? measure.trim() : ''} ${ing.trim()}</li>`;
+        } else break;
+      }
+      ingredientsHtml += '</ul>';
+      const instructions = meal.strInstructions ? meal.strInstructions.replace(/\n/g, '<br>') : 'No instructions provided.';
+      const areaInfo = meal.strArea ? `<p style="margin-top:8px;"><strong>🌍 Origin:</strong> ${meal.strArea}</p>` : '';
+      modalContentDiv.innerHTML = `
+        <div><img src="${meal.strMealThumb}" style="width:100%; border-radius:28px; max-height:260px; object-fit:cover;"></div>
+        ${areaInfo}
+        <h3 style="margin: 1rem 0 0.5rem;">🥗 Ingredients</h3>
+        ${ingredientsHtml}
+        <h3 style="margin: 1rem 0 0.5rem;">📖 Method</h3>
+        <div style="background:#fff8f0; padding:1rem; border-radius:20px; line-height:1.5;">${instructions}</div>
+      `;
+    } catch(err) {
+      modalContentDiv.innerHTML = `<div class="no-results">⚠️ Failed to load recipe details.</div>`;
+    }
+  }
+
+  function initModal() {
+    closeModalBtn.addEventListener('click', () => {
+      modalOverlay.classList.remove('active');
+      document.body.style.overflow = '';
+    });
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        modalOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+        modalOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+  }
+
+  // ---------- EVENT HANDLERS ----------
+  function handleSearch() {
+    const query = mainSearchInput.value.trim();
+    if (query) searchMealsByName(query);
+    else alert("Enter a dish name (e.g., 'pasta', 'curry', 'pie')");
+  }
+
+  function handleCategoryExplore() {
+    const category = categorySelect.value;
+    if (category) fetchByCategory(category);
+    else alert("Please select a category from the dropdown.");
+  }
+
+  // ---------- INITIALIZE ----------
+  async function init() {
+    loadFavoritesFromLocal();
+    await loadCategories();
+    initModal();
+    mainSearchBtn.addEventListener('click', handleSearch);
+    mainSearchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSearch(); });
+    applyCategoryBtn.addEventListener('click', handleCategoryExplore);
+    showFavoritesBtn.addEventListener('click', showFavorites);
+    randomWorldBtn.addEventListener('click', randomGlobalMeal);
+    await loadInitialSampler();
+  }
+  init();
+</script>
+</body>
+</html>
